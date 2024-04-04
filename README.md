@@ -1,13 +1,15 @@
-# LaravelReverb
+# Chat with Laravel Reverb
 
 ## Overview
-Chat with Laravel Reverb
-
+A simple chat
 [Laravel Reverb Documentation](https://laravel.com/docs/11.x/reverb)
+[Pusher Channels Documentation](https://laravel.com/docs/11.x/broadcasting#client-pusher-channels)
+[ShouldBroadcast Interface Documentation](https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
+[Listening for Event Broadcasts Documentation] (https://laravel.com/docs/11.x/broadcasting#listening-for-event-broadcasts)
+
 
 ## Tech Stack
 Laravel Version 11.2.0
-
 
 ## Getting Started
 
@@ -61,10 +63,14 @@ Start the Laravel development server:
 ```bash 
   php artisan serve
 ```
+```bash 
+  php artisan reverb:start --host=127.0.0.1 --port=9000
+```
 
 ## Accessing the Application
-#### Application: http://localhost:8000/
+#### Application: http://localhost:8000
 #### phpMyAdmin: http://localhost:8080
+#### Reverb: http://localhost:9000
 
 ## License
 This revised README.md provides a structured and detailed guide for setting up and running the LaravelReverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.

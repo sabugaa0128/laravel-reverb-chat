@@ -9,7 +9,13 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
+
+                    <div id="chat-containner">
+                        <ul id="messages"></ul>
+                        <x-textarea id="message-area" class="block mt-1 w-full" rows="5" maxlength="500" required></x-textarea>
+                        <x-primary-button id="send-message" data-recipient-id="2">Send</x-primary-button>
+                    </div>
+
                 </div>
             </div>
         </div>

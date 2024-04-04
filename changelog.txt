@@ -1,7 +1,19 @@
 Changelog
 =========
 
-
+Version 1.0.1 - [2024-04-04]
+-------------------
+- [Added] Reverb (https://laravel.com/docs/11.x/reverb)
+- [Added] Pusher Channels (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
+- [Added] ShouldBroadcast ChatMessages (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
+- [Updated] resources\views\layouts\app.blade.php
+    add <meta name="user-id"...>
+- [Updated] resources\views\dashboard.blade.php
+    add <div id="chat">
+- [Defined] The Migration called chat
+- [Added] Chat Model
+- [Added] ChatController
+- [Updated] resources\js\echo.js (https://laravel.com/docs/11.x/broadcasting#namespaces)
 
 
 Version 1.0.0 - [2024-04-04]

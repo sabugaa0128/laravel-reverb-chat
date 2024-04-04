@@ -13,7 +13,7 @@ Laravel Version 11.2.0
 
 ### Prerequisites
 - Docker
-- PHP >= 8.0
+- PHP >= 8.2
 - Composer
 - Node.js and npm
 
@@ -62,9 +62,9 @@ Start the Laravel development server:
   php artisan serve
 ```
 
-#### Accessing the Application
-##### Application: http://localhost:8000/
-##### phpMyAdmin: http://localhost:8080
+## Accessing the Application
+#### Application: http://localhost:8000/
+#### phpMyAdmin: http://localhost:8080
 
-#### License
+## License
 This revised README.md provides a structured and detailed guide for setting up and running the LaravelReverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.

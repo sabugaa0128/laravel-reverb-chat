@@ -31,19 +31,19 @@ Open a terminal in your desired directory and clone the repository:
   cd laravel-reverb-chat
 ```
 
-#### 2. Start Docker Containers
-Ensure Docker is installed and running on your system. Then, initialize the Docker containers:
-```bash
-  docker-compose up --build
-```
-
-#### 3. Install Project Dependencies
+#### 2. Install Project Dependencies
 Navigate to the project's root directory and install the required PHP and JavaScript dependencies:
 ```bash
   npm install
 ```
 ```bash
   composer install
+```
+
+#### 3. Start Docker Containers
+Ensure Docker is installed and running on your system. Then, initialize the Docker containers:
+```bash
+  docker-compose up --build
 ```
 
 #### 4. Set Up the Database

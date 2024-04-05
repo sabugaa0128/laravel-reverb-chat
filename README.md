@@ -40,7 +40,7 @@ Navigate to the project's root directory and install the required PHP and JavaSc
   composer install
 ```
 
-#### 3. Start Docker Containers
+#### 3. Start Docker Containers (in a new terminal)
 Ensure Docker is installed and running on your system. Then, initialize the Docker containers:
 ```bash
   docker-compose up --build
@@ -52,17 +52,20 @@ Start your web server and set up the database schema with Laravel's migration fe
   php artisan migrate 
 ```
 
-#### 5. Compile Frontend Assets
+#### 5. Compile Frontend Assets (in a new terminal)
 Compile the frontend assets using Laravel Mix:
 ```bash 
   npm run dev
 ```
 
-#### 6. Start the server
+#### 6. Start the server (in a new terminal)
 Start the Laravel development server:
 ```bash 
   php artisan serve
 ```
+
+
+#### 6. Start the Reverb server (in a new terminal)
 ```bash 
   php artisan reverb:start --host=127.0.0.1 --port=9000
 ```

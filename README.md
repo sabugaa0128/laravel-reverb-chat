@@ -73,4 +73,4 @@ Start the Laravel development server:
 #### Reverb: http://localhost:9000
 
 ## License
-This revised README.md provides a structured and detailed guide for setting up and running the LaravelReverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.
+This README.md provides a structured and detailed guide for setting up and running the simple Chat Laravel Reverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.

@@ -96,7 +96,6 @@ function sendMessageToServer(message, recipientId) {
 
 // Populate chat container with new messages
 function appendMessageToChat(message, senderName, senderId) {
-
     // Create a new list item
     const newMessage = document.createElement('li');
 
@@ -107,23 +106,27 @@ function appendMessageToChat(message, senderName, senderId) {
         newMessage.classList.add('other-user');
     }
 
-    // Create a sender name text node
-    const senderTextNode = document.createTextNode(senderName + ': ');
-    newMessage.appendChild(senderTextNode);
+    // Create a strong element for the sender's name
+    const strongElement = document.createElement('strong');
+    strongElement.textContent = `${senderName}:`;
+
+    // Append the strong element to the list item
+    newMessage.appendChild(strongElement);
 
     // Process and append the message, maintaining line breaks
-    message.split('\n').forEach((line, index, array) => {
-        // For the first line, append it directly after the sender's name
-        if (index === 0) {
-            const firstLineNode = document.createTextNode(line);
-            newMessage.appendChild(firstLineNode);
-        } else {
-            // For subsequent lines, add a <br> followed by the line
+    const messageParts = message.split('\n');
+    if (messageParts.length > 0) {
+        // Append the first part of the message directly after the sender's name
+        const firstLineNode = document.createTextNode(` ${messageParts[0]}`);
+        newMessage.appendChild(firstLineNode);
+
+        // For subsequent lines, add a <br> followed by the line
+        messageParts.slice(1).forEach(line => {
             newMessage.appendChild(document.createElement('br'));
             const lineNode = document.createTextNode(line);
             newMessage.appendChild(lineNode);
-        }
-    });
+        });
+    }
 
     // Append the new list item to the chat list
     messagesContainer.appendChild(newMessage);
@@ -132,6 +135,7 @@ function appendMessageToChat(message, senderName, senderId) {
 
     messageTextarea.focus();
 }
+
 
 // Fetch older messages from the server
 function fetchOldMessages(recipientId, page = 1) {

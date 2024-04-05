@@ -13,6 +13,7 @@ A simple chat application.
 Laravel Version 11.2.0
 
 ## Getting Started
+This README.md provides a structured and detailed guide for setting up and running the simple Chat Laravel Reverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.
 
 ### Prerequisites
 - Docker
@@ -53,6 +54,11 @@ Start your web server and set up the database schema with Laravel's migration fe
 php artisan migrate 
 ```
 
+Populate the users table with sample data for testing purposes. You can review the seeded data, including login credentials, using tools like phpMyAdmin. By default, the password for all seeded user accounts is set to 'password'. To refresh your database and apply seeding, use:
+```bash 
+php artisan migrate:fresh --seed
+```
+
 #### 5. Compile Frontend Assets (in a new terminal)
 Compile the frontend assets using Laravel Mix:
 ```bash 
@@ -75,5 +81,5 @@ php artisan reverb:start --host=127.0.0.1 --port=9000
 #### Application: http://localhost:8000
 #### phpMyAdmin: http://localhost:8080
 
-## License
-This README.md provides a structured and detailed guide for setting up and running the simple Chat Laravel Reverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.
+
+

@@ -12,7 +12,7 @@
                     <x-select id="select-user" :options="$options" :selected="$selectedOption" :text="'- Select the User -'" />
                     @if ( isset($options) && count($options) == 0 )
                         <div class="text-red-600 mb-3">
-                            To proceed with testing, you'll need to register additional users. Please open an incognito or private browsing window and navigate to the <a href="{{ route('register') }}" class="underline">Registration Page</a> to create new accounts.
+                            To proceed with testing, you'll need to register additional users. Use the artisan command to seed or open an incognito or private browsing window and navigate to the <a href="{{ route('register') }}" class="underline">Registration Page</a> to create new accounts.
                         </div>
                     @endif
 

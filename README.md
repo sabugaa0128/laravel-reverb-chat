@@ -20,15 +20,15 @@ Laravel Version 11.2.0
 - Node.js and npm
 
 ### Installation Guide
-Follow these steps to set up the LaravelReverb project on your local machine:
+Follow these steps to set up the "laravel-reverb-chat" project on your local machine:
 
 #### 1. Clone the project
 Open a terminal in your desired directory and clone the repository:
 ```bash
-  git clone https://github.com/bertogross/LaravelReverb.git
+  git clone https://github.com/bertogross/laravel-reverb-chat.git
 ```
 ```bash
-  cd LaravelReverb
+  cd laravel-reverb-chat
 ```
 
 #### 2. Start Docker Containers

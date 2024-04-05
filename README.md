@@ -15,7 +15,7 @@ Laravel Version 11.2.0
 ## Getting Started
 This README.md provides a structured and detailed guide for setting up and running the simple Chat Laravel Reverb project. It includes prerequisites, a step-by-step installation guide, and links for accessing the application and its documentation.
 
-### Prerequisites
+## Prerequisites
 - Docker
 - PHP >= 8.2
 - Composer

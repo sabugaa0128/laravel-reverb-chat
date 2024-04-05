@@ -10,10 +10,13 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <div id="chat-containner">
-                        <ul id="messages"></ul>
-                        <x-textarea id="message-area" class="block mt-1 w-full" rows="5" maxlength="500" required></x-textarea>
-                        <x-primary-button id="send-message" data-recipient-id="2">Send</x-primary-button>
+                    <x-select id="select-user" :options="$options" :selected="$selectedOption" :text="'- Select the User -'" />
+
+                    <div id="chat-container" style="display: none;">
+                        <ul class="mb-1" id="messages-container"></ul>
+                        <x-textarea id="message-textarea" rows="5" maxlength="500" required />
+                        <div id="error-container"></div>
+                        <x-primary-button id="send-message" data-recipient-id="">Send</x-primary-button>
                     </div>
 
                 </div>

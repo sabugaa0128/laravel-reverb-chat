@@ -1,6 +1,27 @@
 Changelog
 =========
 
+
+
+Version 1.0.2 - [2024-04-05]
+- [Updated] routes\web.php
+- [Added] resources\views\components\textarea.blade.php
+- [Added] resources\views\components\select.blade.php
+- [Updated] resources\views\dashboard.blade.php
+- [Updated] app\Http\Controllers\ChatsController.php
+- [Updated] app\Models\Chat.php
+- [Updated] app\Models\User.php
+- [Updated] routes\channels.php
+- [Updated] resources\js\echo.js
+- [Updated] resources\css\app.css
+- [Updated] .env
+    change the var QUEUE_CONNECTION value database to sync
+- [Updated] Chats Migration
+- [Updated] resources\css\app.css
+- [Updated] config\reverb.php
+
+
+
 Version 1.0.1 - [2024-04-04]
 -------------------
 - [Added] Reverb (https://laravel.com/docs/11.x/reverb)
@@ -9,11 +30,12 @@ Version 1.0.1 - [2024-04-04]
 - [Updated] resources\views\layouts\app.blade.php
     add <meta name="user-id"...>
 - [Updated] resources\views\dashboard.blade.php
-    add <div id="chat">
+    add <div id="chat-container">
 - [Defined] The Migration called chat
 - [Added] Chat Model
-- [Added] ChatController
+- [Added] ChatsController
 - [Updated] resources\js\echo.js (https://laravel.com/docs/11.x/broadcasting#namespaces)
+
 
 
 Version 1.0.0 - [2024-04-04]

@@ -2,10 +2,10 @@
 
 ## Overview
 A simple chat
-[Laravel Reverb Documentation](https://laravel.com/docs/11.x/reverb)
-[Pusher Channels Documentation](https://laravel.com/docs/11.x/broadcasting#client-pusher-channels)
-[ShouldBroadcast Interface Documentation](https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
-[Listening for Event Broadcasts Documentation] (https://laravel.com/docs/11.x/broadcasting#listening-for-event-broadcasts)
+`[Laravel Reverb Documentation](https://laravel.com/docs/11.x/reverb)`
+`[Pusher Channels Documentation](https://laravel.com/docs/11.x/broadcasting#client-pusher-channels)`
+`[ShouldBroadcast Interface Documentation](https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)`
+`[Listening for Event Broadcasts Documentation] (https://laravel.com/docs/11.x/broadcasting#listening-for-event-broadcasts)`
 
 
 ## Tech Stack

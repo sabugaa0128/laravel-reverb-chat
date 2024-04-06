@@ -1,5 +1,6 @@
 // DOC: https://laravel.com/docs/11.x/broadcasting#client-reverb
 
+
 // Import Echo from Laravel Echo library and Pusher as the broadcasting driver.
 import Echo from 'laravel-echo';
 

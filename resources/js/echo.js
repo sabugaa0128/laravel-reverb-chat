@@ -32,12 +32,12 @@ const errorContainer = document.getElementById('error-container');
 
 // Event listener for the send message button.
 sendMessageButton.addEventListener('click', function() {
-    const recipientId = document.getElementById('send-message').getAttribute('data-recipient-id');
+    const recipientIdData = document.getElementById('send-message').getAttribute('data-recipient-id');
     const message = messageTextarea.value.trim();
 
-    if (message && recipientId) {
+    if (message && recipientIdData) {
         // Send the message to the server.
-        sendMessageToServer(message, recipientId);
+        sendMessageToServer(message, recipientIdData);
     }
 });
 
@@ -81,7 +81,7 @@ function sendMessageToServer(message, recipientId) {
 
                 messageTextarea.value = ''; // Reset textarea after successful sending
 
-                errorContainer.textContent = '';// Reset error
+                errorContainer.innerHTML = '';// Reset error
             }
         })
         .catch((error) => {
@@ -139,7 +139,7 @@ function appendMessageToChat(message, senderName, senderId) {
 
 
 // Fetch older messages from the server
-function fetchOldMessages(recipientId, page = 1) {
+function fetchMessages(recipientId, page = 1) {
     if(recipientId){
         if (isLoadingOldMessages) return;
         isLoadingOldMessages = true;
@@ -154,22 +154,25 @@ function fetchOldMessages(recipientId, page = 1) {
         })
         .then(response => response.json())
         .then(data => {
-            // console.log('Old Messages:', data);
+            // console.log('Messages:', data);
 
             const Data = data.data;
             Data.forEach(message => {
                 prependMessageToChat(message.message, message.sender_name, message.sender_id);
             });
+
+            if ( !page || page === 1){
+                scrollToBottom();
+            }
+
             if (data.current_page < data.last_page) {
                 currentPage++;
             } else {
-                // Optionally, remove the scroll listener if there are no more pages to load
+                // Stop listener if there are no more pages to load
                 return;
             }
             isLoadingOldMessages = false;
 
-            // Scroll to the bottom after loading messages
-            scrollToBottom();
         })
         .catch((error) => {
             console.error('Error fetching old messages:', error);
@@ -194,17 +197,21 @@ function generateChannelName(userId1, userId2) {
 }
 
 // Scroll the messages container to the bottom
-function scrollToBottom() {
+function scrollToBottom(time = 200) {
     setTimeout(() => {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 100);
+    }, time);
 }
 
 
 // Listen for changes on the select element
 // To update the recipient ID
 function updateRecipientId() {
+
     const recipientId = selectUser.value;
+    //console.log('Selected Value:', recipientId);
+
+    messagesContainer.innerHTML = '';
 
     // Make the chat-container visible after a user is selected from the dropdown
     if(recipientId) {
@@ -213,53 +220,57 @@ function updateRecipientId() {
 
         // Set the recipient ID attribute on the send button
         sendMessageButton.setAttribute('data-recipient-id', recipientId);
+
+        // Generate the new channel name based on the current and selected user IDs
+        const channelName = generateChannelName(currentUserId, recipientId);
+
+        /**
+         * Listening for messages from Broadcast Name
+         * Subscribing to a Channel and Listening for Events
+         * DOC: https://laravel.com/docs/11.x/broadcasting#namespaces
+         *
+         * ChatMessages is the .Namespace\\Event\\Class :
+         *  app\Events\ChatMessages.php
+         */
+        window.Echo.private(channelName).listen('.chat.messages', (event) => {
+            // Log received event and channel name for debugging.
+            console.log('Listen: ', event);
+
+            /*
+            event.timestamp;
+            event.status;
+            */
+            appendMessageToChat(event.message, event.sender, event.sender_id);
+        });
+
+        // Fetch and display messages for the new recipient
+        fetchMessages(recipientId);
+
     } else {
         // Hide the chat container if the placeholder is selected again
         chatContainer.style.display = 'none';
 
         sendMessageButton.setAttribute('data-recipient-id', '');
+
+        return;
     }
-
-
-    // Generate the new channel name based on the current and selected user IDs
-    const channelName = generateChannelName(currentUserId, recipientId);
-
-    /**
-     * Listening for messages from Broadcast Name
-     * Subscribing to a Channel and Listening for Events
-     * DOC: https://laravel.com/docs/11.x/broadcasting#namespaces
-     *
-     * ChatMessages is the .Namespace\\Event\\Class :
-     *  app\Events\ChatMessages.php
-     */
-    window.Echo.private(channelName).listen('.chat.messages', (event) => {
-        // Log received event and channel name for debugging.
-        // console.log('Listen: ', event);
-
-        /*
-        event.timestamp;
-        event.status;
-        */
-        appendMessageToChat(event.message, event.sender, event.sender_id);
-    });
-
-    // Optionally, fetch and display messages for the new recipient
-    fetchOldMessages(recipientId);
 }
-
-// Listen for changes on the select element
-selectUser.addEventListener('change', updateRecipientId);
 
 // Call updateRecipientId on page load to set the initial recipient ID
 document.addEventListener('DOMContentLoaded', updateRecipientId);
 
+// Listen for changes on the select element
+//selectUser.addEventListener('change', updateRecipientId);
+selectUser.addEventListener('change', function() {
+    window.location.reload();
+});
 
-// Event listener to load older messages when scrolling to the top of the container
+// Event listener to paginate messages when scrolling to the top of the container
 document.querySelector('#messages-container').addEventListener('scroll', function() {
     if (this.scrollTop === 0 && !isLoadingOldMessages) {
         const recipientId = selectUser.value;
 
-        fetchOldMessages(recipientId, currentPage);
+        fetchMessages(recipientId, currentPage);
     }
 });
 

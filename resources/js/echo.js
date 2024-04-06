@@ -245,8 +245,6 @@ function updateRecipientId() {
         // Fetch and display messages for the new recipient
         fetchMessages(recipientId);
 
-        // Scroll to the bottom after loading messages
-        scrollToBottom();
     } else {
         // Hide the chat container if the placeholder is selected again
         chatContainer.style.display = 'none';

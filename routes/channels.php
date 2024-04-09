@@ -10,8 +10,24 @@ use App\Models\Chat;
  */
 Broadcast::channel('chat-channel.{ids}', function (User $user, $ids) {
     [$userId1, $userId2] = explode('_', $ids);
-    if ($user->id == $userId1 || $user->id == $userId2) {
-        return ['id' => $user->id, 'name' => $user->name];
+    if ( auth()->check() && ($user->id == $userId1 || $user->id == $userId2) ) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name
+        ];
     }
+    return false;
+}, ['guards' => ['web']]);
+
+
+// List online users.
+Broadcast::channel('users-online', function (User $user) {
+    if (auth()->check()) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name
+        ];
+    }
+    return false;
 }, ['guards' => ['web']]);
 

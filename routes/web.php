@@ -18,10 +18,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
-    Route::get('/get-messages/{recipientId}', [ChatsController::class, 'index']);
-    Route::post('/post-message', [ChatsController::class, 'store']);
-
+    // Chat Routes
+    Route::post('/get-messages', [ChatsController::class, 'index']);
+    Route::post('/store-message', [ChatsController::class, 'store']);
+    Route::post('/status-messages', [ChatsController::class, 'markAsRead']);
 });
 
 require __DIR__.'/auth.php';

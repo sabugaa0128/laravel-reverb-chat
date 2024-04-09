@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Events;
 
 use App\Models\User;
@@ -7,9 +6,10 @@ use App\Models\Chat;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Support\Facades\Crypt;
 
 class ChatMessages implements ShouldBroadcast
@@ -44,6 +44,7 @@ class ChatMessages implements ShouldBroadcast
         return new PrivateChannel($channelName);
     }
 
+
     /**
      * The Broadcast Name
      */
@@ -59,12 +60,17 @@ class ChatMessages implements ShouldBroadcast
     {
         $message = $this->message->message;
         $messageDecripted = Crypt::decryptString($message);
+
         return [
+            'message_id' => $this->message->id,
             'message' => $messageDecripted,
+            'is_read' => $this->message->is_read,
+            'sender_name' => $this->user->name,
+            'sender_id' => $this->user->id,
+            'recipient_id' => $this->message->recipient_id,
             'timestamp' => $this->message->created_at->toDateTimeString(),
-            'status' => $this->message->status,
-            'sender' => $this->user->name,
-            'sender_id' => $this->user->id
         ];
     }
+
+
 }

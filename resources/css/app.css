@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 
+#error-container:empty{
+    display: none;
+}
+#error-container{
+    color: #B65B5F;
+}
+
 #messages-container{
     border: 1px #525762 solid;
     min-height: 50px;
@@ -12,23 +19,64 @@
     padding: 1.5rem;
     border-radius: 0.5rem;
 }
-#messages-container .current-user{
+.sender{
     text-align: right;
     background-color: #525762;
-    padding: 2px;
+    padding: 5px;
 }
 
-#messages-container .current-user,
-#messages-container .other-user{
+.sender,
+.recipient{
     position: relative;
     margin-bottom: 10px;
     clear: both;
-    width: auto;
+    width: 90%;
+    height: auto;
 }
 
-#error-container:empty{
-    display: none;
+.message-container{
+    position: relative;
+    display: block;
+    min-width: 90%;
+    width: 100%;
 }
-#error-container{
-    color: #B65B5F;
+
+.datetime-badge{
+    position: relative;
+    display: block;
+    clear: both;
+    font-size: 70%;
+}
+
+.status-indicator{
+    position: absolute;
+    right: -15px;
+    bottom: 0px;
+    clear: both;
+}
+
+.status-indicator.read::after {
+    content: "✓";
+    color: rgb(8, 248, 88);
+}
+
+.status-indicator.unread::after {
+    content: "✓";
+    color: rgb(148, 146, 146);
+}
+
+.recipient{
+    float: left;
+}
+
+.sender{
+    float: right;
+    text-align: right;
+}
+
+.sender strong,
+.recipient strong{
+    display: block;
+    position: relative;
+    clear: both;
 }

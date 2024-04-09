@@ -1,7 +1,7 @@
 # Chat with Laravel Reverb
 
 ## Overview
-This project is a simple application built using Laravel Reverb, designed to demonstrate the capabilities of real-time event broadcasting in Laravel. It provides a basic code for a chat system where users can send and receive messages instantly. This application serves as a practical example of implementing Laravel's broadcasting features to create interactive, real-time web applications.
+This is a simple application created as part of my exploration into Laravel Reverb, specifically aimed at understanding the capabilities of real-time event broadcasting. It provides foundational code for a chat system where users can interact within a private channel, sending and receiving messages instantly. This project served as my starting point to learn and implement real-time communication functionalities using Reverb.
 
 ## Features
 - **User Authentication**: Includes basic Laravel authentication to manage user access and registration.

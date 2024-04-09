@@ -44,7 +44,6 @@ class ChatMessages implements ShouldBroadcast
         return new PrivateChannel($channelName);
     }
 
-
     /**
      * The Broadcast Name
      */

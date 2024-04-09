@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.0.4 - 2024-04-09
+- **Updated** `resources\js\echo.js`
+  - Added debounced to scroll events
+  - Added script subscribes to a presence channel called 'users-online'
+- **Updated** `routes\channels.php`
+  - Added Broadcast users-online
+
 ## Version 1.0.3 - 2024-04-08
 - **Updated** `app\Http\Controllers\ChatsController.php`
   - Added `markAsRead` function to handle read status updates.

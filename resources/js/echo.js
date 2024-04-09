@@ -33,67 +33,69 @@ window.Echo = new Echo({
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Initialize onlineUsers
-    let onlineUsers = {};
+    const userSelected = document.getElementById("select-user");
 
-    /**
-     * List online users
-     * This script subscribes to a presence channel called 'users-online' to track and display online users.
-     * The user data (ID and name) are provided by the server in the routes/channels.php file.
-     */
-    window.Echo.join(`users-online`)
-        .here((users) => {
-            console.log('Currently online users in the app:', users);
+    //Check id the userSelected element is present.
+    if (userSelected) {
+        // Initialize onlineUsers
+        let onlineUsers = {};
 
-            onlineUsers = users.map(user => user.id);
-            console.log('Online users:', onlineUsers);
+        /**
+         * List online users
+         * This script subscribes to a presence channel called 'users-online' to track and display online users.
+         * The user data (ID and name) are provided by the server in the routes/channels.php file.
+         */
+        window.Echo.join(`users-online`)
+            .here((users) => {
+                console.log('Currently online users in the app:', users);
 
-            updateUsersDropdown();
-        })
-        .joining((user) => {
-            console.log(`${user.name} has joined.`);
+                onlineUsers = users.map(user => user.id);
+                console.log('Online users:', onlineUsers);
 
-            onlineUsers.push(user.id);
-            console.log('Online users:', onlineUsers);
+                updateUsersDropdown();
+            })
+            .joining((user) => {
+                console.log(`${user.name} has joined.`);
 
-            updateUsersDropdown();
-        })
-        .leaving((user) => {
-            console.log(`${user.name} has left.`);
+                onlineUsers.push(user.id);
+                console.log('Online users:', onlineUsers);
 
-            onlineUsers = onlineUsers.filter(id => id !== user.id);
-            console.log('Online users:', onlineUsers);
+                updateUsersDropdown();
+            })
+            .leaving((user) => {
+                console.log(`${user.name} has left.`);
 
-            updateUsersDropdown();
-        });
+                onlineUsers = onlineUsers.filter(id => id !== user.id);
+                console.log('Online users:', onlineUsers);
 
-    /**
-     * Updates the dropdown to reflect the online status of users.
-     */
-    function updateUsersDropdown() {
-        const select = document.getElementById('select-user');
-        const options = select.options;
+                updateUsersDropdown();
+            });
 
-        for (let i = 0; i < options.length; i++) {
-            const option = options[i];
-            const userId = parseInt(option.value);
+        /**
+         * Updates the dropdown to reflect the online status of users.
+         */
+        function updateUsersDropdown() {
+            const select = document.getElementById('select-user');
+            const options = select.options;
 
-            // Check if the option has a valid user ID
-            if (userId) {
-                if (onlineUsers.includes(userId)) {
-                    option.style.color = 'green'; // Set online users to green
-                } else {
-                    option.style.color = 'red'; // Set offline users to red
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const userId = parseInt(option.value);
+
+                // Check if the option has a valid user ID
+                if (userId) {
+                    if (onlineUsers.includes(userId)) {
+                        option.style.color = 'green'; // Set online users to green
+                    } else {
+                        option.style.color = 'red'; // Set offline users to red
+                    }
                 }
             }
         }
-    }
 
-    /**
-     * This part initialize chat components if the userSelected element is present.
-     */
-    const userSelected = document.getElementById("select-user");
-    if (userSelected) {
+        /**
+         * This part initialize chat components.
+         */
         initializeChat(userSelected);
     }
 });

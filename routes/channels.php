@@ -17,7 +17,7 @@ use App\Models\Chat;
  */
 Broadcast::channel('chat-channel.{ids}', function (User $user, $ids) {
     [$userId1, $userId2] = explode('_', $ids);
-    if ( auth()->check() && ($user->id == $userId1 || $user->id == $userId2) ) {
+    if ($user->id == $userId1 || $user->id == $userId2) {
         return [
             'id' => $user->id,
             'name' => $user->name
@@ -36,11 +36,8 @@ Broadcast::channel('chat-channel.{ids}', function (User $user, $ids) {
  * @return array|bool Returns user details if authorized, otherwise false.
  */
 Broadcast::channel('users-online', function (User $user) {
-    if (auth()->check()) {
-        return [
-            'id' => $user->id,
-            'name' => $user->name
-        ];
-    }
-    return false;
+    return [
+        'id' => $user->id,
+        'name' => $user->name
+    ];
 }, ['guards' => ['web']]);

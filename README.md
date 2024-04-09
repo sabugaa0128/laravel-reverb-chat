@@ -36,6 +36,7 @@ Open a terminal in your desired directory and clone the repository:
 ```bash
 git clone https://github.com/bertogross/laravel-reverb-chat.git
 ```
+Once cloned:
 ```bash
 cd laravel-reverb-chat
 ```

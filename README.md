@@ -80,7 +80,6 @@ npm run dev
 ```
 
 #### 7. Start the Laravel Development Server (in a new terminal):
-Start the Laravel development server:
 ```bash 
 php artisan serve
 ```

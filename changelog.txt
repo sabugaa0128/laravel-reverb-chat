@@ -1,43 +1,64 @@
-Changelog
-=========
+# Changelog
 
+## Version 1.0.3 - 2024-04-08
+- **Updated** `app\Http\Controllers\ChatsController.php`
+  - Added `markAsRead` function to handle read status updates.
+- **Updated** `app\Events\ChatMessages.php`
+  - Modified `broadcastWith()` to enhance event broadcasting details.
+- **Updated** `app\Models\Chat.php`
+  - Updated relationships to link sender and recipient with the `users` table.
+- **Updated** `routes\channels.php`
+  - Adjustments to channel configurations for enhanced security and functionality.
+- **Updated** `routes\web.php`
+  - Added route `status-message` to change `is_read` status column via `markAsRead` function.
 
+## Version 1.0.2 - 2024-04-05
+- **Updated** `routes\web.php`
+  - General route updates and optimizations.
+- **Added** `resources\views\components\textarea.blade.php`
+  - New textarea component for forms.
+- **Added** `resources\views\components\select.blade.php`
+  - New select component for forms.
+- **Updated** `resources\views\dashboard.blade.php`
+  - Enhancements to dashboard layout and functionality.
+- **Updated** `app\Http\Controllers\ChatsController.php`
+  - General controller optimizations.
+- **Updated** `app\Models\Chat.php`
+  - Model adjustments for better data handling.
+- **Updated** `app\Models\User.php`
+  - User model enhancements for better performance.
+- **Updated** `routes\channels.php`
+  - Channel configuration improvements.
+- **Updated** `resources\js\echo.js`
+  - Echo JS script enhancements for real-time features.
+- **Updated** `resources\css\app.css`
+  - Styling updates for better UI consistency.
+- **Updated** `.env`
+  - Changed `QUEUE_CONNECTION` value from `database` to `sync`.
+- **Updated** Chat Migration
+  - Database migration adjustments for the Chat model.
+- **Updated** `config\reverb.php`
+  - Configuration updates for Reverb settings.
 
-Version 1.0.2 - [2024-04-05]
-- [Updated] routes\web.php
-- [Added] resources\views\components\textarea.blade.php
-- [Added] resources\views\components\select.blade.php
-- [Updated] resources\views\dashboard.blade.php
-- [Updated] app\Http\Controllers\ChatsController.php
-- [Updated] app\Models\Chat.php
-- [Updated] app\Models\User.php
-- [Updated] routes\channels.php
-- [Updated] resources\js\echo.js
-- [Updated] resources\css\app.css
-- [Updated] .env
-    change the var QUEUE_CONNECTION value database to sync
-- [Updated] Chats Migration
-- [Updated] resources\css\app.css
-- [Updated] config\reverb.php
+## Version 1.0.1 - 2024-04-04
+- **Added** Reverb integration (https://laravel.com/docs/11.x/reverb)
+- **Added** Pusher Channels support (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
+- **Added** ShouldBroadcast for `ChatMessages` (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
+- **Updated** `resources\views\layouts\app.blade.php`
+  - Added `<meta name="user-id"...>` for user identification.
+- **Updated** `resources\views\dashboard.blade.php`
+  - Added `<div id="chat-container">` for chat UI.
+- **Defined** The Migration for chat
+  - Setup database schema for chat functionality.
+- **Added** Chat Model
+  - Created model for handling chat data.
+- **Added** ChatsController
+  - Controller for managing chat operations.
+- **Updated** `resources\js\echo.js`
+  - Script updates for real-time broadcasting.
+- **Updated** `resources\css\app.css`
+  - CSS updates for chat container styling.
 
-
-
-Version 1.0.1 - [2024-04-04]
--------------------
-- [Added] Reverb (https://laravel.com/docs/11.x/reverb)
-- [Added] Pusher Channels (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
-- [Added] ShouldBroadcast ChatMessages (https://laravel.com/docs/11.x/broadcasting#the-shouldbroadcast-interface)
-- [Updated] resources\views\layouts\app.blade.php
-    add <meta name="user-id"...>
-- [Updated] resources\views\dashboard.blade.php
-    add <div id="chat-container">
-- [Defined] The Migration called chat
-- [Added] Chat Model
-- [Added] ChatsController
-- [Updated] resources\js\echo.js (https://laravel.com/docs/11.x/broadcasting#namespaces)
-
-
-
-Version 1.0.0 - [2024-04-04]
--------------------
-- [Started] Localhost environment configuration
+## Version 1.0.0 - 2024-04-04
+- **Started** configuration of the localhost environment
+  - Initial setup and configuration of the development environment.

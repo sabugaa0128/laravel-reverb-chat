@@ -16,24 +16,33 @@ class Chat extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id',
+        'sender_id',
         'recipient_id',
         'message',
-        'status'
+        'is_read'
     ];
 
     /**
-     * Get the user that owns the message.
+     * Relationship to the User model for the sender
      */
-    public function user()
+    public function sender()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    /**
+     * Relationship to the User model for the recipient
+     */
+    public function recipient()
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
     }
 
     /**
      * Generate the private channel name between two users
      */
-    public static function generateChannelName($userId1, $userId2) {
+    public static function generateChannelName($userId1, $userId2)
+    {
         $ids = [$userId1, $userId2];
 
         // To avoid ambiguity, you might want to sort the user IDs so that the lower ID always comes first. This ensures that both users listen and broadcast to the same channel name regardless of who initiates the chat.

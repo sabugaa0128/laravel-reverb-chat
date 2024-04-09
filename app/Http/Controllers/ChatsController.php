@@ -12,7 +12,75 @@ class ChatsController extends Controller
 {
 
     /**
-     * Stores a new chat message in the database and broadcasts it to the recipient.
+     * Retrieves chat messages between the current user and the specified recipient.
+     *
+     * Fetches paginated chat messages involving the current user and the recipient,
+     * ordered by creation time in descending order. Transforms each message to include
+     * sender information before returning them in a JSON response.
+     *
+     * @param  int  $recipientId  The recipient's user ID.
+     */
+    public function index(Request $request)
+    {
+        $recipientId = $request->input('recipient_id');
+
+        if (!$recipientId) {
+            \Log::error("Recipient ID is required");
+            return;
+        }
+
+        $currentUserId = auth()->id();
+
+        try {
+            $messages = Chat::with('sender')
+                            ->where(function ($query) use ($currentUserId, $recipientId) {
+                                $query->where('sender_id', $currentUserId)
+                                    ->where('recipient_id', $recipientId);
+                            })
+                            ->orWhere(function ($query) use ($currentUserId, $recipientId) {
+                                $query->where('sender_id', $recipientId)
+                                    ->where('recipient_id', $currentUserId)
+                                    ->update(['is_read' => true]);// When users is the same, consider the message readed
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(env('APP_PAGINATION'));
+
+            $messages->getCollection()->transform(function ($chat) {
+                $message = $chat->message ?? null;
+
+                if($message){
+                    $id = $chat->id ?? null;
+
+                    try {
+                        $messageDecripted = Crypt::decryptString($message);
+                    } catch (\Exception $e) {
+                        \Log::error("Decryption error: " . $e->getMessage());
+
+                        $messageDecripted = "Message cannot be decrypted.";
+                    }
+                    return [
+                        'message' => $messageDecripted,
+                        'sender_name' => $chat->sender->name,
+                        'sender_id' => $chat->sender_id,
+                        'timestamp' => $chat->created_at,
+                        'is_read' => $chat->is_read,
+                        'id' => $id
+                    ];
+                }
+
+            });
+
+            return response()->json($messages);
+
+        } catch (\Exception $e) {
+            \Log::error("Error fetching messages: " . $e->getMessage());
+
+            return response()->json(['error' => 'An error occurred while fetching messages'], 500);
+        }
+    }
+
+    /**
+     * Store a new chat message in the database and broadcast it to the recipient
      */
     public function store(Request $request)
     {
@@ -31,26 +99,34 @@ class ChatsController extends Controller
             if ($validator->errors()->has('message') && strlen($request->message) > 500) {
                 return response()->json(['error' => 'Message cannot exceed 500 characters.'], 422);
             }
-            // Handle other validation errors
+
             return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        $currentUserId = auth()->id();
+
+        $messageContent = $request->message;
+        $recipientId = $request->recipient_id;
+
+        if ($currentUserId === $recipientId) {
+            return response()->json(['success' => false]);
         }
 
         try {
             $user = auth()->user();
 
-            $messageContent = $request->message;
             $messageContentEncrypted = Crypt::encryptString($messageContent);
-            $recipientId = $request->recipient_id;
 
             $chatMessage  = new Chat();
-            $chatMessage ->user_id = $user->id;
+            $chatMessage ->sender_id = $user->id;
             $chatMessage ->recipient_id = $recipientId;
             $chatMessage ->message = $messageContentEncrypted;
             $chatMessage ->save();
 
+            // Broadcast it
             event(new ChatMessages($user, $chatMessage, $recipientId));
 
-            return response()->json(['success' => true, 'message' => $messageContent, 'sender' => $user->name]);
+            return response()->json(['success' => true, 'message' => $messageContent, 'sender_name' => $user->name]);
         } catch (\Exception $e) {
             \Log::error('Error saving chat message: ' . $e->getMessage());
 
@@ -60,67 +136,50 @@ class ChatsController extends Controller
     }
 
     /**
-     * Retrieves chat messages between the current user and the specified recipient.
-     *
-     * Fetches paginated chat messages involving the current user and the recipient,
-     * ordered by creation time in descending order. Transforms each message to include
-     * sender information before returning them in a JSON response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $recipientId  The recipient's user ID.
+     * Change status messages when user joined to the channel
      */
-    public function index(Request $request, $recipientId)
+    public function markAsRead(Request $request)
     {
-        if(!$recipientId){
-            return;
-        }
-
         $currentUserId = auth()->id();
 
+        $request->validate([
+            'sender_id' => 'required|integer',
+            'recipient_id' => 'required|integer',
+        ]);
+
+        $senderId = $request->input('sender_id');
+        $recipientId = $request->input('recipient_id');
+
+        if ($currentUserId === $senderId) {
+            return response()->json(['success' => false]);
+        }
+
         try {
-            $messages = Chat::with('user')
-                            ->where(function ($query) use ($currentUserId, $recipientId) {
-                                $query->where('user_id', $currentUserId)
-                                    ->where('recipient_id', $recipientId);
-                            })
-                            ->orWhere(function ($query) use ($currentUserId, $recipientId) {
-                                $query->where('user_id', $recipientId)
-                                    ->where('recipient_id', $currentUserId);
-                            })
-                            ->orderBy('created_at', 'desc')
-                            ->paginate(10);
+            $chatMessages = Chat::where('sender_id', $senderId)
+                                ->where('recipient_id', $recipientId)
+                                ->get();
 
-            $messages->getCollection()->transform(function ($chat) {
-                $message = $chat->message ?? null;
-                if($message){
+            foreach ($chatMessages as $chatMessage) {
+                $chatMessage->is_read = true; // true means read
+                $chatMessage->save();
+            }
 
-                    try {
-                        $messageDecripted = Crypt::decryptString($message);
-                    } catch (\Exception $e) {
-                        \Log::error("Decryption error: " . $e->getMessage());
-
-                        $messageDecripted = "Message cannot be decrypted.";
-                    }
-                    return [
-                        'message' => $messageDecripted,
-                        'sender_name' => $chat->user->name,
-                        'sender_id' => $chat->user_id,
-                    ];
-                }
-
-            });
-
-            return response()->json($messages);
-
+            return response()->json(['success' => true, 'message' => 'Messages marked as read', 'sender_id' => $senderId, 'recipient_id' => $recipientId]);
         } catch (\Exception $e) {
-            \Log::error("Error fetching messages: " . $e->getMessage());
+            \Log::error("Error updating message status: {$e->getMessage()}", [
+                'sender_id' => $senderId,
+                'recipient_id' => $recipientId
+            ]);
 
-            return response()->json(['error' => 'An error occurred while fetching messages'], 500);
+            return response()->json(['error' => 'An error occurred while updating message status'], 500);
         }
     }
 
-
-    public function getUsers(Request $request) {
+    /**
+     * Get all users except the current
+     */
+    public function getUsers(Request $request)
+    {
         $currentUserId = auth()->id();
 
         // Retrieve all users except the current user
@@ -132,11 +191,10 @@ class ChatsController extends Controller
         $options = $users->pluck('name', 'id')->toArray();
 
         // Get the selected user ID from the request, if any
-        $selectedOption = $request->input('user_id');
+        $selectedOption = $request->input('sender_id');
 
         return view('dashboard', compact('options', 'selectedOption'));
     }
-
 
 
 

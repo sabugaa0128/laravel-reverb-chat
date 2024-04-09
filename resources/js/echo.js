@@ -1,12 +1,14 @@
-// DOC: https://laravel.com/docs/11.x/broadcasting#client-reverb
-
-// Import Echo from Laravel Echo library and Pusher as the broadcasting driver.
+/**
+ * Setup Echo and global variables
+ * Initializes Echo with Pusher as the broadcasting driver and sets CSRF token for security.
+ * DOC: https://laravel.com/docs/11.x/broadcasting#client-reverb
+ */
 import Echo from 'laravel-echo';
-
 import Pusher from 'pusher-js';
-window.Pusher = Pusher;
 
-// Pusher as the broadcasting driver for Echo. Here the environment variables.
+window.Pusher = Pusher;
+const xCSRFtoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 window.Echo = new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -15,261 +17,401 @@ window.Echo = new Echo({
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
-});
-
-
-// Initialize variables for managing state and DOM elements.
-let currentPage = 1;
-let isLoadingOldMessages = false;
-const selectUser = document.getElementById('select-user');
-const currentUserId = document.querySelector('meta[name="current-user-id"]').getAttribute('content');
-const chatContainer = document.getElementById('chat-container');
-const messagesContainer = document.querySelector('#chat-container ul#messages-container');
-const sendMessageButton = document.getElementById('send-message');
-const messageTextarea = document.getElementById('message-textarea');
-const errorContainer = document.getElementById('error-container');
-
-// Event listener for the send message button.
-sendMessageButton.addEventListener('click', function() {
-    const recipientIdData = document.getElementById('send-message').getAttribute('data-recipient-id');
-    const message = messageTextarea.value.trim();
-
-    if (message && recipientIdData) {
-        // Send the message to the server.
-        sendMessageToServer(message, recipientIdData);
+    auth: {
+        headers: {
+            'X-CSRF-TOKEN': xCSRFtoken
+        }
     }
 });
 
 
-// Send a new message to the server via AJAX
-function sendMessageToServer(message, recipientId) {
-    // console.log('Sending message: ', message);
+/**
+ * Main function to initialize chat components if the userSelected element is present.
+ */
+document.addEventListener("DOMContentLoaded", function () {
+    const userSelected = document.getElementById("select-user");
+    if (userSelected) {
+        initializeChat(userSelected);
+    }
+});
 
-    if (message && recipientId){
-        fetch('/post-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                message: message,
-                recipient_id: parseInt(recipientId)
+/**
+ * Initializes the chat application by setting up channel listeners and message sending capabilities.
+ */
+function initializeChat(userSelected) {
+    // Initialize variables.
+    let currentPage = 1;
+    let isLoadingOldMessages = false;
+
+    // Global state to track status between two users
+    let statusBetweenUsers = {};
+
+    const recipientId = parseInt(userSelected.value);
+
+    const currentUserId = parseInt(document.querySelector('meta[name="current-user-id"]').getAttribute('content'));
+
+    const channelName = generateChannelName(currentUserId, recipientId);
+
+    const chatContainer = document.getElementById('chat-container');
+    const messagesContainer = document.querySelector('#chat-container ul#messages-container');
+    const sendMessageButton = document.getElementById('send-message');
+    const messageTextarea = document.getElementById('message-textarea');
+    const errorContainer = document.getElementById('error-container');
+
+
+    /**
+     * Subscribe to the Channel:
+     * Modify a channel and handle the list of online users
+     * https://laravel.com/docs/11.x/broadcasting#joining-presence-channels
+     */
+    console.log('Subscribing to channel:', channelName);
+    window.Echo.join(channelName)
+        .here((users) => {
+            console.log('Currently online users:', users);
+
+            users.forEach(user => statusBetweenUsers[user.id] = user);
+        })
+        .joining((user) => {
+            console.log(user.name + ' has joined the channel.');
+
+            statusBetweenUsers[user.id] = user;
+
+            updateMessageBadgeStatus(user.id);
+
+            addUserToOnlineList(user);
+        })
+        .leaving((user) => {
+            console.log(user.name + ' has left the channel.');
+
+            delete statusBetweenUsers[user.id];
+
+            removeUserFromOnlineList(user);
+        })
+        .listen('.chat.messages', (event) => {
+            console.log('Received message:', event);
+        })
+        .error((error) => {
+            console.error(error);
+        });
+
+
+    /**
+     * Event listener for the send message button
+     */
+    sendMessageButton.addEventListener('click', function() {
+        var message = messageTextarea.value.trim();
+
+        if (message && recipientId) {
+            // Send the message to the server.
+            storeMessage(message, recipientId);
+        }
+    });
+
+    /**
+     * Sends a new message to the server via AJAX.
+     * @param {string} message - The message to send.
+     * @param {int} recipientId - The ID of the recipient.
+     */
+    function storeMessage(message, recipientId) {
+        // console.log('Sending message: ', message);
+
+        if (message && recipientId){
+            fetch('/store-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': xCSRFtoken
+                },
+                body: JSON.stringify({
+                    message: message,
+                    recipient_id: parseInt(recipientId)
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                // Flag and message in case of validation failure
-                if (data.error) {
-                    console.error('Validation Error:', data.error);
-
-                    // Display the error to the user, adjust selector as needed
-                    errorContainer.textContent = data.error;
-                } else if (data.errors) {
-                    // Handle multiple validation errors (e.g., Laravel validation errors)
-                    // Join all error messages into a single string to display
-                    const allErrors = Object.values(data.errors).map(errorArray => errorArray.join(', ')).join('; ');
-                    console.error('Validation Errors:', allErrors);
-
-                    errorContainer.textContent = allErrors;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message with status code: ' + response.status);
                 }
-            } else {
-                // Handle success case
-                // console.log('Success:', data.message);
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    // Flag and message in case of validation failure
+                    if (data.error) {
+                        console.error('Validation Error:', data.error);
 
-                messageTextarea.value = ''; // Reset textarea after successful sending
+                        // Display the error to the user, adjust selector as needed
+                        errorContainer.textContent = data.error;
+                    } else if (data.errors) {
+                        // Handle multiple validation errors (e.g., Laravel validation errors)
+                        // Join all error messages into a single string to display
+                        const allErrors = Object.values(data.errors).map(errorArray => errorArray.join(', ')).join('; ');
+                        console.error('Validation Errors:', allErrors);
 
-                errorContainer.innerHTML = '';// Reset error
-            }
-        })
-        .catch((error) => {
-            console.error('Fetch Error:', error.message);
+                        errorContainer.textContent = allErrors;
+                    }
+                } else {
+                    // Handle success case
+                    // console.log('Success:', data.message);
 
-            errorContainer.textContent = 'An error occurred while sending the message.';
-        });
-    }
+                    messageTextarea.value = ''; // Reset textarea after successful sending
 
+                    errorContainer.innerHTML = '';// Reset error
+                }
+            })
+            .catch((error) => {
+                console.error('Fetch Error:', error.message);
 
-}
-
-
-// Populate chat container with new messages
-function appendMessageToChat(message, senderName, senderId) {
-    // Create a new list item
-    const newMessage = document.createElement('li');
-
-    // Add a class based on the sender
-    if (senderId == currentUserId) {
-        newMessage.classList.add('current-user');
-    } else {
-        newMessage.classList.add('other-user');
-    }
-
-    // Create a strong element for the sender's name
-    const strongElement = document.createElement('strong');
-    strongElement.textContent = `${senderName}:`;
-
-    // Append the strong element to the list item
-    newMessage.appendChild(strongElement);
-
-    // Process and append the message, maintaining line breaks
-    const messageParts = message.split('\n');
-    if (messageParts.length > 0) {
-        // Append the first part of the message directly after the sender's name
-        const firstLineNode = document.createTextNode(` ${messageParts[0]}`);
-        newMessage.appendChild(firstLineNode);
-
-        // For subsequent lines, add a <br> followed by the line
-        messageParts.slice(1).forEach(line => {
-            newMessage.appendChild(document.createElement('br'));
-            const lineNode = document.createTextNode(line);
-            newMessage.appendChild(lineNode);
-        });
-    }
-
-    // Append the new list item to the chat list
-    messagesContainer.appendChild(newMessage);
-
-    scrollToBottom();
-
-    messageTextarea.focus();
-}
-
-
-// Fetch older messages from the server
-function fetchMessages(recipientId, page = 1) {
-    if(recipientId){
-        if (isLoadingOldMessages) return;
-        isLoadingOldMessages = true;
-
-        fetch(`/get-messages/${recipientId}?page=${page}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            // console.log('Messages:', data);
-
-            const Data = data.data;
-            Data.forEach(message => {
-                prependMessageToChat(message.message, message.sender_name, message.sender_id);
+                errorContainer.textContent = 'An error occurred while sending the message.';
             });
+        }
+    }
 
-            if ( !page || page === 1){
-                scrollToBottom();
+    /**
+     * Fetch older messages from the server
+     * @param {int} recipientId
+     * @param {int} page
+     * @returns
+     */
+    function retrieveMessages(recipientId, page = 1) {
+        if(recipientId){
+            if (isLoadingOldMessages) return;
+            isLoadingOldMessages = true;
+
+            fetch(`/get-messages/?page=${page}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': xCSRFtoken
+                },
+                body: JSON.stringify({
+                    recipient_id: parseInt(recipientId)
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to get messages with status code: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                //console.log('Messages:', data);
+
+                var Data = data.data;
+                Data.forEach(message => {
+                    populateChat(message.id, message.message, message.sender_id, message.sender_name, message.timestamp, message.is_read, true);
+                });
+
+                if ( !page || page === 1){
+                    scrollToBottom();
+                }
+
+                if (data.current_page < data.last_page) {
+                    currentPage++;
+                } else {
+                    // Stop listener if there are no more pages to load
+                    return;
+                }
+                isLoadingOldMessages = false;
+            })
+            .catch((error) => {
+                console.error('Error fetching old messages:', error);
+                isLoadingOldMessages = false;
+            });
+        }
+    }
+
+    /**
+     * Populate messages to the chat container
+     * @param {int} messageId
+     * @param {string} message
+     * @param {int} senderId
+     * @param {string} senderName
+     * @param {string} timestamp
+     * @param {boolean} isRead
+     * @param {boolean} [prepend=false]
+     */
+    function populateChat(messageId, message, senderId, senderName, timestamp, isRead, prepend = false) {
+        var formattedDate = formatDateTime(timestamp);
+        var newMessage = document.createElement('li');
+        newMessage.classList.add(senderId == currentUserId ? 'sender' : 'recipient');
+
+        // Sender's name
+        var strongElement = document.createElement('strong');
+        strongElement.textContent = `${senderName}`;
+        newMessage.appendChild(strongElement);
+
+        // Message text, replacing newlines with spaces for inline display
+        var messageDiv = document.createElement('div');
+        messageDiv.classList.add('message-container');
+        var messageParts = message.split('\n');
+        messageParts.forEach((part, index) => {
+            if (index > 0) {
+                messageDiv.appendChild(document.createElement('br')); // Add line breaks between parts
             }
-
-            if (data.current_page < data.last_page) {
-                currentPage++;
-            } else {
-                // Stop listener if there are no more pages to load
-                return;
-            }
-            isLoadingOldMessages = false;
-
-        })
-        .catch((error) => {
-            console.error('Error fetching old messages:', error);
-            isLoadingOldMessages = false;
+            messageDiv.appendChild(document.createTextNode(part));
         });
+        newMessage.appendChild(messageDiv);
+
+        // Date and time
+        var dateTimeElement = document.createElement('span');
+        dateTimeElement.classList.add('datetime-badge');
+        dateTimeElement.textContent = ` ${formattedDate}`;
+        newMessage.appendChild(dateTimeElement);
+
+        // Status indicator
+        if (currentUserId == senderId) {
+            var statusElement = document.createElement('span');
+            statusElement.setAttribute('data-message-id', messageId);
+            statusElement.classList.add('status-indicator', isRead ? 'read' : 'unread');
+            newMessage.appendChild(statusElement);
+        }
+
+        // Decide whether to append or prepend the message based on the 'prepend' flag
+        if (prepend) {
+            messagesContainer.insertBefore(newMessage, messagesContainer.firstChild);
+        } else {
+            messagesContainer.appendChild(newMessage);
+            scrollToBottom();
+        }
+
+        messageTextarea.focus();
     }
-}
 
-// Populate old messages to the chat container
-function prependMessageToChat(message, senderName, senderId) {
-    const newMessage = document.createElement('li');
-    newMessage.className = senderId == currentUserId ? 'current-user' : 'other-user';
-    newMessage.innerHTML = `<strong>${senderName}:</strong> ${message}`;
-    // Prepend the message at the top of the container
-    messagesContainer.insertBefore(newMessage, messagesContainer.firstChild);
-}
+    /**
+     *Listen for changes on the select element to update the recipient ID
+     * @param {int} recipientId
+     * @returns
+     */
+    function updateRecipientId(recipientId) {
+        messagesContainer.innerHTML = '';
 
-// Generate a unique channel name based on the user Ids
-function generateChannelName(userId1, userId2) {
-    // To avoid ambiguity, you might want to sort the user IDs so that the lower ID always comes first. This ensures that both users listen and broadcast to the same channel name regardless of who initiates the chat.
-    return `chat-channel.${[userId1, userId2].sort((a, b) => a - b).join('_')}`;
-}
-
-// Scroll the messages container to the bottom
-function scrollToBottom(time = 200) {
-    setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, time);
-}
+        // Make the chat-container visible after a user is selected from the dropdown
+        if(recipientId) {
+            // Make the chat container visible
+            chatContainer.style.display = 'block';
 
 
-// Listen for changes on the select element
-// To update the recipient ID
-function updateRecipientId() {
+            /**
+             * Listening for messages from Broadcast Name
+             * Subscribing to a Channel and Listening for Events
+             * DOC: https://laravel.com/docs/11.x/broadcasting#namespaces
+             *
+             * ChatMessages is the .Namespace\\Event\\Class :
+             *  app\Events\ChatMessages.php
+             * return event from broadcastWith()
+             */
+            window.Echo.private(channelName)
+                .listen('.chat.messages', (event) => {
+                    // Log received event and channel name for debugging.
+                    //console.log('Listen: ', event);
 
-    const recipientId = selectUser.value;
-    //console.log('Selected Value:', recipientId);
+                    const isRecipientUserOnline = !!statusBetweenUsers[recipientId];
+                    console.log('isRecipientUserOnline', isRecipientUserOnline);
 
-    messagesContainer.innerHTML = '';
+                    let isRead = event.is_read;
+                    if(isRecipientUserOnline){
+                        isRead = true;
+                    }
 
-    // Make the chat-container visible after a user is selected from the dropdown
-    if(recipientId) {
-        // Make the chat container visible
-        chatContainer.style.display = 'block';
+                    populateChat(event.message_id, event.message, event.sender_id, event.sender_name, event.timestamp, isRead);
+                });
 
-        // Set the recipient ID attribute on the send button
-        sendMessageButton.setAttribute('data-recipient-id', recipientId);
+            // Fetch and display messages for the new recipient
+            retrieveMessages(recipientId);
+        } else {
+            // Hide the chat container if the placeholder is selected again
+            chatContainer.style.display = 'none';
 
-        // Generate the new channel name based on the current and selected user IDs
-        const channelName = generateChannelName(currentUserId, recipientId);
-
-        /**
-         * Listening for messages from Broadcast Name
-         * Subscribing to a Channel and Listening for Events
-         * DOC: https://laravel.com/docs/11.x/broadcasting#namespaces
-         *
-         * ChatMessages is the .Namespace\\Event\\Class :
-         *  app\Events\ChatMessages.php
-         */
-        window.Echo.private(channelName).listen('.chat.messages', (event) => {
-            // Log received event and channel name for debugging.
-            console.log('Listen: ', event);
-
-            /*
-            event.timestamp;
-            event.status;
-            */
-            appendMessageToChat(event.message, event.sender, event.sender_id);
-        });
-
-        // Fetch and display messages for the new recipient
-        fetchMessages(recipientId);
-
-    } else {
-        // Hide the chat container if the placeholder is selected again
-        chatContainer.style.display = 'none';
-
-        sendMessageButton.setAttribute('data-recipient-id', '');
-
-        return;
+            return;
+        }
     }
-}
 
-// Call updateRecipientId on page load to set the initial recipient ID
-document.addEventListener('DOMContentLoaded', updateRecipientId);
+    /**
+     * Manage the online status display based on the users currently connected to the channel.
+     * @param {int} user
+     */
+    function updateMessageBadgeStatus(user) {
+        if(user == recipientId){
+            // Select all elements with the 'status-indicator unread' class within messages from the specified user
+            const statusIndicators = document.querySelectorAll(`.status-indicator.unread`);
 
-// Listen for changes on the select element
-//selectUser.addEventListener('change', updateRecipientId);
-selectUser.addEventListener('change', function() {
-    window.location.reload();
-});
-
-// Event listener to paginate messages when scrolling to the top of the container
-document.querySelector('#messages-container').addEventListener('scroll', function() {
-    if (this.scrollTop === 0 && !isLoadingOldMessages) {
-        const recipientId = selectUser.value;
-
-        fetchMessages(recipientId, currentPage);
+            // Iterate through each status indicator and update its class
+            statusIndicators.forEach(indicator => {
+                indicator.classList.remove('unread');
+                indicator.classList.add('read');
+            });
+        }
     }
-});
 
+    /**
+     * Adds a user to the online list in the UI, indicating their presence in the chat.
+     * @param {Object} user - The user to add.
+     */
+    function addUserToOnlineList(user) {
+        // TODO Add user to the online list in UI
+    }
+
+    /**
+     * Removes a user from the online list in the UI, indicating they have left the chat.
+     * @param {Object} user - The user to remove.
+     */
+    function removeUserFromOnlineList(user) {
+        // TODO Remove user from the online list in UI
+    }
+
+    /**
+     * Generates a unique channel name based on user IDs to ensure privacy and correct message routing.
+     * @param {int} userId1 - The first user ID.
+     * @param {int} userId2 - The second user ID.
+     * @returns {string} The generated channel name.
+     */
+    function generateChannelName(userId1, userId2) {
+        return `chat-channel.${[userId1, userId2].sort((a, b) => a - b).join('_')}`;
+    }
+
+    /**
+     * Helper to format dates
+     * @param {string} dateTime
+     * @returns
+     */
+    function formatDateTime(dateTime) {
+        return new Date(dateTime).toLocaleString('en-GB', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
+        }).replace(',', '');
+    }
+
+    /**
+     * Helper to scroll the messages container to the bottom
+     * @param {number} time
+     */
+    function scrollToBottom(time = 200) {
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, time);
+    }
+
+    /**
+     * Call updateRecipientId on page load to set the initial recipient ID
+     * @param {int} recipientId
+     */
+    document.addEventListener('DOMContentLoaded', updateRecipientId(recipientId));
+
+    /**
+     * Listen for changes on the select element
+     */
+    userSelected.addEventListener('change', function() {
+        window.location.reload();
+    });
+
+    /**
+     * Event listener to paginate messages when scrolling to the top of the container
+     */
+    document.querySelector('#messages-container').addEventListener('scroll', function() {
+        if (this.scrollTop === 0 && !isLoadingOldMessages) {
+            retrieveMessages(recipientId, currentPage);
+        }
+    });
+
+
+}

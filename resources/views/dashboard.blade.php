@@ -17,10 +17,10 @@
                     @endif
 
                     <div id="chat-container" style="display: none;">
-                        <ul class="mb-1" id="messages-container"></ul>
-                        <x-textarea id="message-textarea" rows="5" maxlength="500" required />
+                        <ul id="messages-container" class="mb-1"></ul>
+                        <x-textarea id="message-textarea" rows="2" maxlength="500" required />
                         <div id="error-container"></div>
-                        <x-primary-button id="send-message" data-recipient-id="">Send</x-primary-button>
+                        <x-primary-button id="send-message">Send</x-primary-button>
                     </div>
 
                 </div>
